@@ -171,7 +171,7 @@ static hash_table_t *hash_table_create(void)
   //
   // complete this
   //
-  hash_table->hash_table_size = 2; // just a dummy value
+  hash_table->hash_table_size = 100; // just a dummy value
   hash_table->number_of_entries = 0;
   hash_table->number_of_edges = 0;
   hash_table->heads = (hash_table_node_t **)malloc(sizeof(hash_table_node_t *) * hash_table->hash_table_size);
@@ -336,12 +336,42 @@ static hash_table_node_t *find_representative(hash_table_node_t *node)
 static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char *word)
 {
   hash_table_node_t *to,*from_representative,*to_representative;
-  adjacency_node_t *link;
+  adjacency_node_t *linkfrom, *linkto;
 
   to = find_word(hash_table,word,0);
   //
   // complete this
   //
+  
+  // add node from to the adjacency list of word
+  // add word to the adjacency list of from
+  // if from and word are not already in the same component
+  // set the representative of the component of from to the representative of the component of word
+
+  if(to != NULL)
+  {
+    from_representative = find_representative(from);
+    to_representative = find_representative(to);
+    if(from_representative != to_representative)
+    {
+      to_representative->representative = from_representative;
+    }
+  }
+  else
+  {
+    to = find_word(hash_table,word,1);
+    linkfrom = allocate_adjacency_node();
+    linkfrom->vertex = to;
+    linkfrom->next = from->head;
+    from->head = linkfrom;
+
+    linkto = allocate_adjacency_node();
+    linkto->vertex = from;
+    linkto->next = to->head;
+    to->head = linkto;
+  }
+
+
 }
 
 
