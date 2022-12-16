@@ -2,7 +2,8 @@
 
 #include <stdio.h>
 
-#define MAX 10
+#define MAX 500
+
 
 void addFront(int *, int, int *, int *);
 void addRear(int *, int, int *, int *);
@@ -11,45 +12,6 @@ int delRear(int *, int *, int *);
 void display(int *);
 int count(int *);
 
-int main() {
-  int arr[MAX];
-  int front, rear, i, n;
-
-  front = rear = -1;
-  for (i = 0; i < MAX; i++)
-    arr[i] = 0;
-
-  addRear(arr, 5, &front, &rear);
-  addFront(arr, 12, &front, &rear);
-  addRear(arr, 11, &front, &rear);
-  addFront(arr, 5, &front, &rear);
-  addRear(arr, 6, &front, &rear);
-  addFront(arr, 8, &front, &rear);
-
-  printf("\nElements in a deque: ");
-  display(arr);
-
-  i = delFront(arr, &front, &rear);
-  printf("\nremoved item: %d", i);
-
-  printf("\nElements in a deque after deletion: ");
-  display(arr);
-
-  addRear(arr, 16, &front, &rear);
-  addRear(arr, 7, &front, &rear);
-
-  printf("\nElements in a deque after addition: ");
-  display(arr);
-
-  i = delRear(arr, &front, &rear);
-  printf("\nremoved item: %d", i);
-
-  printf("\nElements in a deque after deletion: ");
-  display(arr);
-
-  n = count(arr);
-  printf("\nTotal number of elements in deque: %d", n);
-}
 
 void addFront(int *arr, int item, int *pfront, int *prear) {
   int i, k, c;
