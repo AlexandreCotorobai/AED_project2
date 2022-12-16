@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "deque.h"
 
 //
 // static configuration
@@ -471,50 +472,22 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // complete this
   //
 
-  //use queue to store the neighbors of the current vertex
-  queue_t *queue = queue_new();
-  //use hash table to store the visited vertices
-  hash_table_t *visited = hash_table_new(1000000);
-  //use hash table to store the previous vertex of the current vertex
-  hash_table_t *previous = hash_table_new(1000000);
-  //use hash table to store the distance of the current vertex to the origin
-  hash_table_t *distance = hash_table_new(1000000);
-  
-  //initialize the origin vertex
-  hash_table_insert(visited, origin->word, origin);
-  hash_table_insert(previous, origin->word, NULL);
-  hash_table_insert(distance, origin->word, 0);
-  queue_enqueue(queue, origin);
-  
-  //initialize the goal vertex
-  hash_table_node_t *current = NULL;
-  hash_table_node_t *neighbor = NULL;
-  int dist = 0;
-  int count = 0;
+  // create queue list
 
-  while(!queue_is_empty(queue)){
-    current = queue_dequeue(queue);
-    dist = (int)hash_table_lookup(distance, current->word);
-    if(current == goal){
-      break;
-    }
-    for(int i = 0; i < current->number_of_neighbors; i++){
-      neighbor = current->neighbors[i];
-      if(hash_table_lookup(visited, neighbor->word) == NULL){
-        hash_table_insert(visited, neighbor->word, neighbor);
-        hash_table_insert(previous, neighbor->word, current);
-        hash_table_insert(distance, neighbor->word, dist + 1);
-        queue_enqueue(queue, neighbor);
-        count++;
-      }
-    }
-  }
-  queue_free(queue);
-  hash_table_free(visited);
-  hash_table_free(previous);
-  hash_table_free(distance);
-  // return count;
+
+  queue_list_t *queue_list = create_queue_list();
+
+
+
+
   
+
+  
+
+
+
+
+
 
 
   return -1;
