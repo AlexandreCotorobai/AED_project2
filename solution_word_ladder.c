@@ -205,7 +205,7 @@ static void hash_table_grow(hash_table_t *hash_table)
   new_heads = (hash_table_node_t **)malloc(sizeof(hash_table_node_t *) * hash_table->hash_table_size);
 
   // check if the reallocation was successful
-  if(hash_table->heads == NULL)                                       
+  if(hash_table->heads == NULL)
   {
     fprintf(stderr,"create_hash_table heads: out of memory\n");
     exit(1);
@@ -302,7 +302,7 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
     // se number_of_entries > 0.75 * hash_table_size chamar hash_table_grow
     if(hash_table->number_of_entries >= 0.75 * hash_table->hash_table_size)
     {
-      printf("size: %d\n", hash_table->hash_table_size);
+      printf("has grownnnn!!");
       hash_table_grow(hash_table);
     }
 
@@ -334,13 +334,13 @@ static hash_table_node_t *find_representative(hash_table_node_t *node)
 static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char *word)
 {
   hash_table_node_t *to,*from_representative,*to_representative;
-  adjacency_node_t *linkfrom, *linkto;
+  adjacency_node_t *edge_origin , *edge_to;
 
   to = find_word(hash_table,word,0);
   //
   // complete this
   //
-  
+
   // add node from to the adjacency list of word
   // add word to the adjacency list of from
   // if from and word are not already in the same component
@@ -357,17 +357,21 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   // }
   // else
   // {
-    to = find_word(hash_table,word,0);
-    linkfrom = allocate_adjacency_node();
-    linkfrom->vertex = to;
-    linkfrom->next = from->head;
-    from->head = linkfrom;
+  if(to != NULL){
+    edge_origin = allocate_adjacency_node();
+    edge_origin->vertex = to;
+    // adiciona no inicio da lista
+    edge_origin->next = from->head;
+    from->head = edge_origin;
 
-    linkto = allocate_adjacency_node();
-    linkto->vertex = from;
-    linkto->next = to->head;
-    to->head = linkto;
-  // }
+    edge_to = allocate_adjacency_node();
+    edge_to->vertex = from;
+    // adiciona no inicio da lista
+    edge_to->next = to->head;
+    to->head = edge_to;
+  }
+
+
 
 }
 
@@ -475,13 +479,13 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // - number of vertices visited to 0
 
   // fila de ponteiros para nÃ³s
-  
+
 
   // create a queue to store nodes that need to be visited
   queue_t *queue = queue_create();
 
   // push the starting node into the queue
-  enqueue(queue, origin);  
+  enqueue(queue, origin);
 
   // while the queue is not empty
   // while (!is_empty(queue)) {
@@ -593,11 +597,9 @@ int main(int argc,char **argv)
   }
   while(fscanf(fp,"%99s",word) == 1) {
     (void)find_word(hash_table,word,1);
-    printf("word: %s\n", word);
   }
   fclose(fp);
   // find all similar words
-  printf("Hash table size: %d\n", hash_table->hash_table_size);
   for(i = 0u;i < hash_table->hash_table_size;i++) {
     for(node = hash_table->heads[i];node != NULL;node = node->next)
       similar_words(hash_table,node);
@@ -606,33 +608,60 @@ int main(int argc,char **argv)
   // printf("%s\n", find_word(hash_table,"Comba",1));
   // printf("%s\n", find_word(hash_table,"Congo",1));
   // ask what to do
-  for(;;)
-  {
-    fprintf(stderr,"Your wish is my command:\n");
-    fprintf(stderr,"  1 WORD       (list the connected component WORD belongs to)\n");
-    fprintf(stderr,"  2 FROM TO    (list the shortest path from FROM to TO)\n");
-    fprintf(stderr,"  3            (terminate)\n");
-    fprintf(stderr,"> ");
-    if(scanf("%99s",word) != 1)
-      break;
-    command = atoi(word);
-    if(command == 1)
-    {
-      if(scanf("%99s",word) != 1)
-        break;
-      list_connected_component(hash_table,word);
-    }
-    else if(command == 2)
-    {
-      if(scanf("%99s",from) != 1)
-        break;
-      if(scanf("%99s",to) != 1)
-        break;
-      path_finder(hash_table,from,to);
-    }
-    else if(command == 3)
-      break;
-  }
+  // for(;;)
+  // {
+  //   fprintf(stderr,"Your wish is my command:\n");
+  //   fprintf(stderr,"  1 WORD       (list the connected component WORD belongs to)\n");
+  //   fprintf(stderr,"  2 FROM TO    (list the shortest path from FROM to TO)\n");
+  //   fprintf(stderr,"  3            (terminate)\n");
+  //   fprintf(stderr,"> ");
+  //   if(scanf("%99s",word) != 1)
+  //     break;
+  //   command = atoi(word);
+  //   if(command == 1)
+  //   {
+  //     if(scanf("%99s",word) != 1)
+  //       break;
+  //     list_connected_component(hash_table,word);
+  //   }
+  //   else if(command == 2)
+  //   {
+  //     if(scanf("%99s",from) != 1)
+  //       break;
+  //     if(scanf("%99s",to) != 1)
+  //       break;
+  //     path_finder(hash_table,from,to);
+  //   }
+  //   else if(command == 3)
+  //     break;
+  // }
+
+
+
+  //
+  // TESTAR ADJACENCY LIST ------------------------------------------------------------
+  //
+
+
+  // print adjacency list
+  //     printf("Adjacency list of %s: ", hash_table->heads[42]->word);
+  //     adjacency_node_t *temp = hash_table->heads[42]->head;
+  //     while(temp != NULL)
+  //     {
+  //       printf("%s ", temp->vertex->word);
+  //       temp = temp->next;
+  //     }
+  //     printf("\n");
+
+  // //print elements in head of hash table
+  // for(i = 0u;i < hash_table->hash_table_size;i++) {
+  //   for(node = hash_table->heads[i];node != NULL;node = node->next){
+  //     printf("i: %d\n", i);
+  //     printf("word: %s\n", node->word);
+  //   }
+  // }
+
+
   // clean up
   hash_table_free(hash_table);
   return 0;
