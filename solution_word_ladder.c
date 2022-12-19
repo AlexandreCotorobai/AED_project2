@@ -1,5 +1,5 @@
 //
-// AED, November 2022 (Tomás Oliveira e Silva)
+// AED, November 2022 (TomÃ¡s Oliveira e Silva)
 //
 // Second practical assignement (speed run)
 //
@@ -43,8 +43,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "deque.h"
 
 //
 // static configuration
@@ -172,7 +170,7 @@ static hash_table_t *hash_table_create(void)
   //
   // complete this
   //
-  hash_table->hash_table_size = 100; // just a dummy value
+  hash_table->hash_table_size = 50; // just a dummy value
   hash_table->number_of_entries = 0;
   hash_table->number_of_edges = 0;
   hash_table->heads = (hash_table_node_t **)malloc(sizeof(hash_table_node_t *) * hash_table->hash_table_size);
@@ -300,10 +298,11 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
     // printf("node word (not found): %s\n", node->word);
     // printf("Hash table size: %d\n", hash_table->hash_table_size);
     // printf("Number of entries: %d\n", hash_table->number_of_entries);
+
     // se number_of_entries > 0.75 * hash_table_size chamar hash_table_grow
     if(hash_table->number_of_entries >= 0.75 * hash_table->hash_table_size)
     {
-      // printf("Hash table grow\n");
+      printf("size: %d\n", hash_table->hash_table_size);
       hash_table_grow(hash_table);
     }
 
@@ -313,8 +312,6 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
   {
     return NULL;
   }
-
-  
 
   return node;
 }
@@ -349,18 +346,18 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   // if from and word are not already in the same component
   // set the representative of the component of from to the representative of the component of word
 
-  if(to != NULL)
-  {
-    from_representative = find_representative(from);
-    to_representative = find_representative(to);
-    if(from_representative != to_representative)
-    {
-      to_representative->representative = from_representative;
-    }
-  }
-  else
-  {
-    to = find_word(hash_table,word,1);
+  // if(to != NULL)
+  // {
+  //   from_representative = find_representative(from);
+  //   to_representative = find_representative(to);
+  //   if(from_representative != to_representative)
+  //   {
+  //     to_representative->representative = from_representative;
+  //   }
+  // }
+  // else
+  // {
+    to = find_word(hash_table,word,0);
     linkfrom = allocate_adjacency_node();
     linkfrom->vertex = to;
     linkfrom->next = from->head;
@@ -370,7 +367,7 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
     linkto->vertex = from;
     linkto->next = to->head;
     to->head = linkto;
-  }
+  // }
 
 }
 
@@ -436,8 +433,8 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
     0x4E,0x4F,0x50,0x51,0x52,0x53,0x54,0x55,0x56,0x57,0x58,0x59,0x5A,           // N O P Q R S T U V W X Y Z
     0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6A,0x6B,0x6C,0x6D,           // a b c d e f g h i j k l m
     0x6E,0x6F,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7A,           // n o p q r s t u v w x y z
-    0xC1,0xC2,0xC9,0xCD,0xD3,0xDA,                                              // Á Â É Í Ó Ú
-    0xE0,0xE1,0xE2,0xE3,0xE7,0xE8,0xE9,0xEA,0xED,0xEE,0xF3,0xF4,0xF5,0xFA,0xFC, // à á â ã ç è é ê í î ó ô õ ú ü
+    0xC1,0xC2,0xC9,0xCD,0xD3,0xDA,                                              // Ã Ã‚ Ã‰ Ã Ã“ Ãš
+    0xE0,0xE1,0xE2,0xE3,0xE7,0xE8,0xE9,0xEA,0xED,0xEE,0xF3,0xF4,0xF5,0xFA,0xFC, // Ã  Ã¡ Ã¢ Ã£ Ã§ Ã¨ Ã© Ãª Ã­ Ã® Ã³ Ã´ Ãµ Ãº Ã¼
     0
   };
   int i,j,k,individual_characters[_max_word_size_];
@@ -465,6 +462,7 @@ static void similar_words(hash_table_t *hash_table,hash_table_node_t *from)
 //
 // returns the number of vertices visited; if the last one is goal, following the previous links gives the shortest path between goal and origin
 //
+#include "queue.h"
 
 static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t **list_of_vertices,hash_table_node_t *origin,hash_table_node_t *goal)
 {
@@ -472,25 +470,41 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // complete this
   //
 
-  // create queue list
+  // set the variables:
+  // - previous of each node to NULL
+  // - number of vertices visited to 0
 
-
-  queue_list_t *queue_list = create_queue_list();
-
-
-
-
+  // fila de ponteiros para nÃ³s
   
 
-  
+  // create a queue to store nodes that need to be visited
+  queue_t *queue = queue_create();
 
+  // push the starting node into the queue
+  enqueue(queue, origin);  
 
+  // while the queue is not empty
+  // while (!is_empty(queue)) {
 
+  //   // tirar o primeiro nÃ³ da fila
+  //   // consutar os seus vizinhos
+  //   // se o vizinho nao foi visitado adicionar a fila
 
+  //   // dequeue the first node
+  //   hash_table_node_t *node = dequeue(queue);
 
+  //   // if the node is the goal, return the number of vertices visited
+  //   if (node == goal) {
+  //     return maximum_number_of_vertices;
+  //   }
 
+  // }
 
-  return -1;
+  // return visited
+  return maximum_number_of_vertices;
+
+  // quando poe na queue meter que foi visitado e a previous
+  // fila de ponteiros para os vertices
 }
 
 
@@ -577,16 +591,20 @@ int main(int argc,char **argv)
     fprintf(stderr,"main: unable to open the words file\n");
     exit(1);
   }
-  while(fscanf(fp,"%99s",word) == 1)
+  while(fscanf(fp,"%99s",word) == 1) {
     (void)find_word(hash_table,word,1);
+    printf("word: %s\n", word);
+  }
   fclose(fp);
   // find all similar words
-  for(i = 0u;i < hash_table->hash_table_size;i++)
+  printf("Hash table size: %d\n", hash_table->hash_table_size);
+  for(i = 0u;i < hash_table->hash_table_size;i++) {
     for(node = hash_table->heads[i];node != NULL;node = node->next)
       similar_words(hash_table,node);
+  }
   graph_info(hash_table);
-  printf("%s\n", find_word(hash_table,"Comba",1));
-  printf("%s\n", find_word(hash_table,"Congo",1));
+  // printf("%s\n", find_word(hash_table,"Comba",1));
+  // printf("%s\n", find_word(hash_table,"Congo",1));
   // ask what to do
   for(;;)
   {
