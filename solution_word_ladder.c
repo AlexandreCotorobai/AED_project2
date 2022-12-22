@@ -504,55 +504,80 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   
   // create array of nodes
   // printf("O3333I\n");
-  hash_table_node_t *nodesArray[maximum_number_of_vertices + 1];
+  hash_table_node_t *nodesArray[maximum_number_of_vertices];
   hash_table_node_t *parent = NULL;
 
   int r = 0; int w = 1;
+  nodesArray[0] = origin;
+  origin->previous = NULL;
+  origin->visited = 1;
 
   while (r != w) {
 
     hash_table_node_t *current = nodesArray[r];
+    parent = current;
     r++;
     adjacency_node_t *adj_node = current->head;
 
-    while (adj_node != NULL) {
+    for (int i = 0; i < maximum_number_of_vertices && adj_node != NULL; i++) {
       if(adj_node->vertex->visited == 0) {
-        // printf("%s\n ", adj_node->vertex->word);
-        nodesArray[w] = adj_node->vertex;
-        // printf("banana\n");
-        w++;
+
+        nodesArray[w++] = adj_node->vertex;
         adj_node->vertex->visited = 1;
         adj_node->vertex->previous = parent;
-        parent = adj_node->vertex;
 
-        adj_node = adj_node->next;
-        printf("%s <- %s\n ", adj_node->vertex->previous , adj_node->vertex->word);
-        if (adj_node->vertex == goal) {
-
-          // from adj_node->vertex, get every previous node until origin
-          printf("found goal\n");
-          int count = 0;
-          hash_table_node_t *temp = adj_node->vertex;
-          while (temp != origin) {
-            printf("%s\n", temp->word);
-            temp = temp->previous;
-            count++;
-          }
-          printf("%s\n", temp->word);
-
-
-          return count;
+        if (adj_node->vertex == goal){
+          break;
         }
       }
-      printf("chouriço\n");
-      
-
+      adj_node = adj_node->next;
     }
-    // printf("w: %d\n", w);
-    return 0;
+
+    if (adj_node != NULL && adj_node->vertex == goal){
+      break;
+    }
 
   }
 
+
+
+  // create solution array of length w
+
+  hash_table_node_t *node = goal;
+  int index = w-1; int count = 0;
+
+  while(node->previous != NULL){
+    count++;
+    node = node->previous;
+  }
+  
+  hash_table_node_t *solArr[count];
+  node = goal;
+  solArr[count] = node;
+
+
+  while(node->previous != NULL){
+    node = node->previous;
+    solArr[--count] = node;
+  }
+  printf("count: %i\n", count);
+
+
+  printf("Solucao--------------------------------------------\n");
+
+  for (int i = 0; i < count; i++) {
+    printf("%i - %s\n",i, solArr[i]->word);
+  }
+
+
+
+
+  printf("nodesArray--------------------------------------------\n");
+      for (int i = 0; i < w; i++) {
+      printf("%i - %s\n",i, nodesArray[i]->word);
+    }
+  printf("R: %i\n", w);
+  return r;
 }
 
 
