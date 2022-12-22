@@ -539,6 +539,9 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
 
   }
 
+  for (int i = 0; i < w; i++) {
+    nodesArray[i]->visited = 0;
+  }
   // create solution array of length w
 
   hash_table_node_t *node = goal;
@@ -559,18 +562,18 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
     node = node->previous;
   }
 
+  // todos os nodes do caminho mais curto
   printf("Solucao--------------------------------------------\n");
 
   for (int i = 0; i < sizeof(solArr)/sizeof(solArr[0]); i++) {
     printf("%i - %s\n",i, solArr[i]->word);
   }
 
+  // todos os nodes visitados
   printf("nodesArray--------------------------------------------\n");
   for (int i = 0; i < w; i++) {
     printf("%i - %s\n",i, nodesArray[i]->word);
   }
-  
-  printf("R: %i\n", w);
 
   return w;
 }
