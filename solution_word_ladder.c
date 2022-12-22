@@ -539,45 +539,40 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
 
   }
 
-
-
   // create solution array of length w
 
   hash_table_node_t *node = goal;
-  int index = w-1; int count = 0;
+  int index = w-1; int count = 1;
 
   while(node->previous != NULL){
     count++;
     node = node->previous;
   }
-  
+
   hash_table_node_t *solArr[count];
   node = goal;
   solArr[count] = node;
 
 
-  while(node->previous != NULL){
-    node = node->previous;
+  while(node != NULL){
     solArr[--count] = node;
+    node = node->previous;
   }
-  printf("count: %i\n", count);
-
 
   printf("Solucao--------------------------------------------\n");
 
-  for (int i = 0; i < count; i++) {
+  for (int i = 0; i < sizeof(solArr)/sizeof(solArr[0]); i++) {
     printf("%i - %s\n",i, solArr[i]->word);
   }
 
-
-
-
   printf("nodesArray--------------------------------------------\n");
-      for (int i = 0; i < w; i++) {
-      printf("%i - %s\n",i, nodesArray[i]->word);
-    }
+  for (int i = 0; i < w; i++) {
+    printf("%i - %s\n",i, nodesArray[i]->word);
+  }
+  
   printf("R: %i\n", w);
-  return r;
+
+  return w;
 }
 
 
