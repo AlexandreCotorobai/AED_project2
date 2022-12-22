@@ -545,11 +545,12 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // create solution array of length w
 
   hash_table_node_t *node = goal;
-  int index = w-1; int count = 1;
+  int index = w-1; int count = 0;
 
-  while(node->previous != NULL){
-    count++;
+  while(node != NULL){
+
     node = node->previous;
+    count++;
   }
 
   hash_table_node_t *solArr[count];
