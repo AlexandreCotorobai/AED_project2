@@ -13,11 +13,12 @@ typedef struct {
   int rear;
 } queue_t;
 
-void create_queue(){
+queue_t* create_queue(){
     // Initializes a queue by setting the front and rear indices to -1.
     queue_t *q = malloc(sizeof(queue_t));
     q->front = -1;
     q->rear = -1;
+    return q;
 }
 
 void destroy_queue(queue_t *q){
@@ -25,23 +26,23 @@ void destroy_queue(queue_t *q){
     free(q);
 }
 
-bool is_empty(queue_t *q){
+int is_empty(queue_t *q){
     // Returns true if the queue is empty, false otherwise.
     if (q->front == -1 && q->rear == -1){
-        return true;
+        return 1;
     }
     else{
-        return false;
+        return 0;
     }
 }
 
-bool is_full(queue_t *q) {
+int is_full(queue_t *q) {
     // Returns true if the queue is full, false otherwise.
     if (q->rear == MAX_QUEUE_SIZE - 1){
-        return true;
+        return 1;
     }
     else{
-        return false;
+        return 0;
     }
 }
 

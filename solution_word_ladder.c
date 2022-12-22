@@ -295,6 +295,9 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
     node->next = hash_table->heads[i];
     hash_table->heads[i] = node;
     hash_table->number_of_entries++;
+    node->representative = node;
+
+
     // printf("node word (not found): %s\n", node->word);
     // printf("Hash table size: %d\n", hash_table->hash_table_size);
     // printf("Number of entries: %d\n", hash_table->number_of_entries);
@@ -302,7 +305,7 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
     // se number_of_entries > 0.75 * hash_table_size chamar hash_table_grow
     if(hash_table->number_of_entries >= 0.75 * hash_table->hash_table_size)
     {
-      printf("has grownnnn!!");
+      printf("has grownnnn!!\n");
       hash_table_grow(hash_table);
     }
 
@@ -323,11 +326,19 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
 
 static hash_table_node_t *find_representative(hash_table_node_t *node)
 {
-  hash_table_node_t *representative,*next_node;
+  hash_table_node_t *representative,*next_node,*temp;
 
   //
   // complete this
   //
+  for(representative = node; representative->representative != representative; representative = representative->representative);
+
+  for(next_node = node; next_node != representative; next_node = temp)
+  {
+    temp = next_node->representative;
+    node->representative = representative;
+  }
+
   return representative;
 }
 
@@ -346,32 +357,44 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   // if from and word are not already in the same component
   // set the representative of the component of from to the representative of the component of word
 
-  // if(to != NULL)
-  // {
-  //   from_representative = find_representative(from);
-  //   to_representative = find_representative(to);
-  //   if(from_representative != to_representative)
-  //   {
-  //     to_representative->representative = from_representative;
-  //   }
-  // }
-  // else
-  // {
-  if(to != NULL){
-    edge_origin = allocate_adjacency_node();
-    edge_origin->vertex = to;
-    // adiciona no inicio da lista
-    edge_origin->next = from->head;
-    from->head = edge_origin;
-
-    edge_to = allocate_adjacency_node();
-    edge_to->vertex = from;
-    // adiciona no inicio da lista
-    edge_to->next = to->head;
-    to->head = edge_to;
+  if(to == NULL || to == from)
+  {
+    return;
   }
 
+  from_representative = find_representative(from);
+  to_representative = find_representative(to);
 
+  if(from_representative != to_representative)
+  {
+    if(from_representative->number_of_vertices < to_representative->number_of_vertices)
+    {
+      from_representative->representative = to_representative;
+      to_representative->number_of_vertices += from_representative->number_of_vertices;
+      to_representative->number_of_edges += from_representative->number_of_edges;
+    }
+    else
+    {
+      to_representative->representative = from_representative;
+      from_representative->number_of_vertices += to_representative->number_of_vertices;
+      from_representative->number_of_edges += to_representative->number_of_edges;
+    }
+  }
+  
+  to_representative->number_of_edges++;
+  from_representative->number_of_edges++;
+
+  edge_origin = allocate_adjacency_node();
+  edge_origin->vertex = to;
+  // adiciona no inicio da lista
+  edge_origin->next = from->head;
+  from->head = edge_origin;
+
+  edge_to = allocate_adjacency_node();
+  edge_to->vertex = from;
+  // adiciona no inicio da lista
+  edge_to->next = to->head;
+  to->head = edge_to;
 
 }
 
@@ -474,41 +497,43 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // complete this
   //
 
-  // set the variables:
-  // - previous of each node to NULL
-  // - number of vertices visited to 0
+  // find representative of connected component
+  //hash_table_node_t *representative = find_representative(origin);
+  
+  // create array of nodes
+    printf("O3333I\n");
+  hash_table_node_t *nodesArray[maximum_number_of_vertices];
+  hash_table_node_t *parent = NULL;
+  
+  int r = 0; int w = 1;
+  printf("OI\n");
+  while (r != w) {
 
-  // fila de ponteiros para nÃ³s
+    hash_table_node_t *current = nodesArray[r];
+    r++;
+    adjacency_node_t *adj_node = current->head;
+  printf("OI2\n");
+    while (adj_node != NULL) {
+      if(adj_node->vertex->visited == 0) {
+  printf("O34341111I\n");
+        nodesArray[w] = adj_node->vertex;
+        w++;
+        adj_node->vertex->visited = 1;
+        adj_node->vertex->previous = parent;
+        parent = adj_node->vertex;
+  printf("OI3\n");
+        adj_node = adj_node->next;
+      }
 
+      if (adj_node->vertex == goal) {
+        return w-1;
+      }
 
-  // create a queue to store nodes that need to be visited
-  queue_t *queue = queue_create();
+    }
+    return w-1;
 
-  // push the starting node into the queue
-  enqueue(queue, origin);
+  }
 
-  // while the queue is not empty
-  // while (!is_empty(queue)) {
-
-  //   // tirar o primeiro nÃ³ da fila
-  //   // consutar os seus vizinhos
-  //   // se o vizinho nao foi visitado adicionar a fila
-
-  //   // dequeue the first node
-  //   hash_table_node_t *node = dequeue(queue);
-
-  //   // if the node is the goal, return the number of vertices visited
-  //   if (node == goal) {
-  //     return maximum_number_of_vertices;
-  //   }
-
-  // }
-
-  // return visited
-  return maximum_number_of_vertices;
-
-  // quando poe na queue meter que foi visitado e a previous
-  // fila de ponteiros para os vertices
 }
 
 
@@ -654,12 +679,15 @@ int main(int argc,char **argv)
   //     printf("\n");
 
   // //print elements in head of hash table
-  // for(i = 0u;i < hash_table->hash_table_size;i++) {
-  //   for(node = hash_table->heads[i];node != NULL;node = node->next){
-  //     printf("i: %d\n", i);
-  //     printf("word: %s\n", node->word);
-  //   }
-  // }
+  for(i = 0u;i < hash_table->hash_table_size;i++) {
+    for(node = hash_table->heads[i];node != NULL;node = node->next){
+      printf("%d-> %s\n", i,node->word);
+    }
+  }
+
+  // testar breadth first search
+  // int x = breadh_first_search(find_representative(find_word(hash_table,"tudo",0))->number_of_vertices, hash_table->heads,find_word(hash_table,"tudo",0),find_word(hash_table,"nuda",0));
+  printf("%i", find_representative(find_word(hash_table,"tudo",0))->number_of_vertices);
 
 
   // clean up
