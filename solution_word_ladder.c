@@ -307,7 +307,7 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
     // se number_of_entries > 0.75 * hash_table_size chamar hash_table_grow
     if(hash_table->number_of_entries >= 0.75 * hash_table->hash_table_size)
     {
-      printf("has grownnnn!!\n");
+      printf("has grownnnn!! prev %i size\n", hash_table->hash_table_size);
       hash_table_grow(hash_table);
     }
 
@@ -386,7 +386,6 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   to_representative->number_of_edges++;
   from_representative->number_of_edges++;
 
-
   edge_origin = allocate_adjacency_node();
   edge_origin->vertex = to;
   // adiciona no inicio da lista
@@ -398,7 +397,6 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
   // adiciona no inicio da lista
   edge_to->next = to->head;
   to->head = edge_to;
-
 }
 
 
@@ -502,24 +500,29 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // find representative of connected component
   //hash_table_node_t *representative = find_representative(origin);
   
-  // create array of nodes
-  // printf("O3333I\n");
   hash_table_node_t *nodesArray[maximum_number_of_vertices];
   hash_table_node_t *parent = NULL;
+
+
+  if(origin == NULL)
+  {
+    fprintf(stderr,"breadh_first_search: origin is NULL\n");
+    return -1;
+  }
 
   int r = 0; int w = 1;
   nodesArray[0] = origin;
   origin->previous = NULL;
   origin->visited = 1;
+  int stop = 0;
 
-  while (r != w) {
+  while (r != w && stop == 0) {
 
     hash_table_node_t *current = nodesArray[r];
     parent = current;
     r++;
-    adjacency_node_t *adj_node = current->head;
 
-    for (int i = 0; i < maximum_number_of_vertices && adj_node != NULL; i++) {
+    for (adjacency_node_t *adj_node = current->head; adj_node != NULL; adj_node = adj_node->next) {
       if(adj_node->vertex->visited == 0) {
 
         nodesArray[w++] = adj_node->vertex;
@@ -527,16 +530,16 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
         adj_node->vertex->previous = parent;
 
         if (adj_node->vertex == goal){
+          stop = 1;
           break;
         }
       }
-      adj_node = adj_node->next;
+
     }
 
-    if (adj_node != NULL && adj_node->vertex == goal){
-      break;
-    }
-
+    // if (adj_node != NULL && adj_node->vertex == goal){
+    //   break;
+    // }
   }
 
   for (int i = 0; i < w; i++) {
@@ -557,7 +560,6 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   node = goal;
   solArr[count] = node;
 
-
   while(node != NULL){
     solArr[--count] = node;
     node = node->previous;
@@ -571,11 +573,12 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   }
 
   // todos os nodes visitados
-  printf("nodesArray--------------------------------------------\n");
-  for (int i = 0; i < w; i++) {
-    printf("%i - %s\n",i, nodesArray[i]->word);
-  }
+  // printf("nodesArray--------------------------------------------\n");
+  // for (int i = 0; i < w; i++) {
+  //   printf("%i - %s\n",i, nodesArray[i]->word);
+  // }
 
+  printf("w = %i\n", w);
   return w;
 }
 
@@ -657,7 +660,7 @@ int main(int argc,char **argv)
   // printf("%s\n", find_word(hash_table,"pera",1));
 
   // read words
-  fp = fopen((argc < 2) ? "wordlist-five-letters.txt" : argv[1],"rb");
+  fp = fopen((argc < 2) ? "wordlist-four-letters.txt" : argv[1],"rb");
   if(fp == NULL)
   {
     fprintf(stderr,"main: unable to open the words file\n");
@@ -722,15 +725,26 @@ int main(int argc,char **argv)
   //     printf("\n");
 
   // //print elements in head of hash table
-  for(i = 0u;i < hash_table->hash_table_size;i++) {
-    for(node = hash_table->heads[i];node != NULL;node = node->next){
-      printf("%d-> %s\n", i,node->word);
-    }
-  }
+  // for(i = 0u;i < hash_table->hash_table_size;i++) {
+  //   for(node = hash_table->heads[i];node != NULL;node = node->next){
+  //     printf("%d-> %s\n", i,node->word);
+  //   }
+  // }
 
   // testar breadth first search
-  int x = breadh_first_search(find_representative(find_word(hash_table,"tudo",0))->number_of_vertices, hash_table->heads,find_word(hash_table,"tudo",0),find_word(hash_table,"nuda",0));
+  // printf("banana\n");
 
+  if (find_word(hash_table,"tudo",0) == NULL){
+
+    printf("nao existe\n");
+
+  }else{
+
+    int x = breadh_first_search(find_representative(find_word(hash_table,"tudo",0))->number_of_vertices, hash_table->heads,find_word(hash_table,"tudo",0),find_word(hash_table,"nada",0));
+    printf("x: %i\n",x);
+
+  }
+  
   // print all representatives of the graph
   // for(i = 0u;i < hash_table->hash_table_size;i++) {
   //   for(node = hash_table->heads[i];node != NULL;node = node->next){
