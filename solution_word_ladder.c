@@ -500,7 +500,7 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   // find representative of connected component
   //hash_table_node_t *representative = find_representative(origin);
   
-  hash_table_node_t *nodesArray[maximum_number_of_vertices];
+  //hash_table_node_t *list_of_vertices[maximum_number_of_vertices];
   hash_table_node_t *parent = NULL;
 
 
@@ -511,21 +511,21 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   }
 
   int r = 0; int w = 1;
-  nodesArray[0] = origin;
+  list_of_vertices[0] = origin;
   origin->previous = NULL;
   origin->visited = 1;
   int stop = 0;
 
   while (r != w && stop == 0) {
 
-    hash_table_node_t *current = nodesArray[r];
+    hash_table_node_t *current = list_of_vertices[r];
     parent = current;
     r++;
 
     for (adjacency_node_t *adj_node = current->head; adj_node != NULL; adj_node = adj_node->next) {
       if(adj_node->vertex->visited == 0) {
 
-        nodesArray[w++] = adj_node->vertex;
+        list_of_vertices[w++] = adj_node->vertex;
         adj_node->vertex->visited = 1;
         adj_node->vertex->previous = parent;
 
@@ -542,43 +542,44 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
     // }
   }
 
+  // passar todos os visited a zero
   for (int i = 0; i < w; i++) {
-    nodesArray[i]->visited = 0;
-  }
-  // create solution array of length w
-
-  hash_table_node_t *node = goal;
-  int index = w-1; int count = 0;
-
-  while(node != NULL){
-
-    node = node->previous;
-    count++;
+    list_of_vertices[i]->visited = 0;
   }
 
-  hash_table_node_t *solArr[count];
-  node = goal;
-  solArr[count] = node;
 
-  while(node != NULL){
-    solArr[--count] = node;
-    node = node->previous;
-  }
+  // hash_table_node_t *node = goal;
+  // int index = w-1; int count = 0;
 
-  // todos os nodes do caminho mais curto
-  printf("Solucao--------------------------------------------\n");
-
-  for (int i = 0; i < sizeof(solArr)/sizeof(solArr[0]); i++) {
-    printf("%i - %s\n",i, solArr[i]->word);
-  }
-
-  // todos os nodes visitados
-  // printf("nodesArray--------------------------------------------\n");
-  // for (int i = 0; i < w; i++) {
-  //   printf("%i - %s\n",i, nodesArray[i]->word);
+  //ver quantos nodes tem o caminho mais curto
+  // while(node != NULL){
+  //   node = node->previous;
+  //   count++;
   // }
 
-  printf("w = %i\n", w);
+  // hash_table_node_t *solArr[count];
+  // node = goal;
+  // solArr[count] = node;
+
+  // // guardar todos os nodes do caminho mais curto
+  // while(node != NULL){
+  //   solArr[--count] = node;
+  //   node = node->previous;
+  // }
+
+  // todos os nodes do caminho mais curto
+  // printf("Solucao--------------------------------------------\n");
+
+  // for (int i = 0; i < sizeof(solArr)/sizeof(solArr[0]); i++) {
+  //   printf("%i - %s\n",i, solArr[i]->word);
+  // }
+
+  // todos os nodes visitados
+  // printf("list_of_vertices--------------------------------------------\n");
+  // for (int i = 0; i < w; i++) {
+  //   printf("%i - %s\n",i, list_of_vertices[i]->word);
+  // }
+
   return w;
 }
 
@@ -592,6 +593,29 @@ static void list_connected_component(hash_table_t *hash_table,const char *word)
   //
   // complete this
   //
+
+  hash_table_node_t *node = find_word(hash_table,word,0);
+
+
+  if (node == NULL){
+
+    printf("Word inserida não existe\n");
+    return;
+  }
+
+
+  int vertex_max = find_representative(node)->number_of_vertices;
+  hash_table_node_t *list_of_vertices[vertex_max];
+  int n_elements = breadh_first_search(vertex_max, &list_of_vertices, node, NULL);
+
+  // todos os nodes visitados
+  printf("Lista de todos os nós pertencentes à componenete de %s\n", word);
+  for (int i = 0; i < n_elements; i++) {
+    printf("%i - %s\n",i, list_of_vertices[i]->word);
+  }
+  printf("Tamanho da componente: %i\n", n_elements);
+
+  
 }
 
 
@@ -622,6 +646,49 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
   //
   // complete this
   //
+
+  hash_table_node_t *from_node = find_word(hash_table,from_word,0);
+  hash_table_node_t *to_node = find_word(hash_table,to_word,0);
+
+  if (from_node == NULL || to_node == NULL){
+
+    printf("Word inserida não existe\n");
+    return;
+
+  }
+      
+  int vertex_max = find_representative(from_node)->number_of_vertices;
+  hash_table_node_t *list_of_vertices[vertex_max];
+
+  int n_elements = breadh_first_search(vertex_max, &list_of_vertices, from_node, to_node);
+
+  hash_table_node_t *node = to_node;
+  int index = n_elements-1; int count = 0;
+
+  // ver quantos nodes tem o caminho mais curto
+  while(node != NULL){
+    node = node->previous;
+    count++;
+  }
+
+  hash_table_node_t *solArr[count];
+  node = to_node;
+  solArr[count] = node;
+
+  // guardar todos os nodes do caminho mais curto
+  while(node != NULL){
+    solArr[--count] = node;
+    node = node->previous;
+  }
+
+  //todos os nodes do caminho mais curto
+  printf("Caminho mais curto de %s a %s\n", from_word, to_word);
+
+  for (int i = 0; i < sizeof(solArr)/sizeof(solArr[0]); i++) {
+    printf("%i - %s\n",i, solArr[i]->word);
+  }
+  printf("Tamanho do caminho: %i\n", sizeof(solArr)/sizeof(solArr[0]));
+
 }
 
 
@@ -734,16 +801,7 @@ int main(int argc,char **argv)
   // testar breadth first search
   // printf("banana\n");
 
-  if (find_word(hash_table,"tudo",0) == NULL){
 
-    printf("nao existe\n");
-
-  }else{
-
-    int x = breadh_first_search(find_representative(find_word(hash_table,"tudo",0))->number_of_vertices, hash_table->heads,find_word(hash_table,"tudo",0),find_word(hash_table,"nada",0));
-    printf("x: %i\n",x);
-
-  }
   
   // print all representatives of the graph
   // for(i = 0u;i < hash_table->hash_table_size;i++) {
@@ -752,6 +810,9 @@ int main(int argc,char **argv)
   //   }
   // }
 
+
+  list_connected_component(hash_table,"tudo");
+  path_finder(hash_table,"nada","tudo");
 
 
   // clean up
