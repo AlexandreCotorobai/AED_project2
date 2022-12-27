@@ -250,9 +250,16 @@ static void hash_table_free(hash_table_t *hash_table)
     hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
     while(node != NULL)                             // while the node has a next node
     {
-      hash_table_node_t *temp = node;               // set temp to the node
-      node = node->next;                            // set node to the next node
-      free(temp);                                   // free the temp node
+      hash_table_node_t *temp = node; // set temp to the node
+      node = node->next;              // set node to the next node                    // free the temp node
+      adjacency_node_t *adj_node = temp->head; // set adj_node to the first element of the adjacency list
+      while (adj_node != NULL)                 // while the adj_node has a next node
+      {
+        adjacency_node_t *temp_adj = adj_node; // set temp_adj to the adj_node
+        adj_node = adj_node->next;             // set adj_node to the next node
+        free_adjacency_node(temp_adj);                        // free the temp_adj node
+      }
+      free_hash_table_node(temp);                                   // free the temp node
     }
   }
   free(hash_table->heads);
@@ -290,6 +297,8 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
   if(insert_if_not_found == 1)
   {
     node = allocate_hash_table_node();
+    node->previous = NULL;
+    node->visited = 0;
     strcpy(node->word, word);
     node->head = NULL;
     node->next = hash_table->heads[i];
