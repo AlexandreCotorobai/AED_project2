@@ -654,16 +654,11 @@ static int connected_component_diameter(hash_table_node_t *node)
   // complete this
   //
   // printf("connected_component_diameter: node %s\n", node->word);
-  int vertex_max = find_representative(node)->number_of_vertices;
-
   hash_table_node_t **path, **list_of_vertices, **list_of_vertices2;
-
+  int vertex_max = find_representative(node)->number_of_vertices;
 
   list_of_vertices = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));
   list_of_vertices2 = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));
-
-  // hash_table_node_t *destino = NULL;
-  // printf("cheguei1\n");
   path = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t *));
 
   if(list_of_vertices == NULL || list_of_vertices2 == NULL)
@@ -712,7 +707,7 @@ static int connected_component_diameter(hash_table_node_t *node)
     // printf("cheguei3\n");
   }
 
-  diameter = diameter -1;
+  // diameter = diameter -1;
 
   if(diameter > largest_diameter) {
     largest_diameter = diameter;
@@ -725,14 +720,14 @@ static int connected_component_diameter(hash_table_node_t *node)
   diameter_sum+=diameter;
   number_of_connected_components++;
 
-  printf("--------------------------------------------\n");
-  printf("Diametro da componente: %i\n", diameter);
+  // printf("--------------------------------------------\n");
+  // printf("Diametro da componente: %i\n", diameter);
 
-  for (int i = 0; i < diameter; i++) {
-    printf("%i - %s\n",i, path[i]->word);
-  }
+  // for (int i = 0; i < diameter; i++) {
+  //   printf("%i - %s\n",i, path[i]->word);
+  // }
 
-  printf("--------------------------------------------\n");
+  // printf("--------------------------------------------\n");
 
 
   free(list_of_vertices);
@@ -817,36 +812,47 @@ static void graph_info(hash_table_t *hash_table)
   //
   // complete this
   //
+
   // run all heads of hash_table
   // for each head, run connected_component_diameter
   // and update the global variables
   //
 
-  // for (int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
-  // {
-  //   hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
-  //   while(node != NULL && node->visited == 0)                             // while the node has a next node
-  //   {
-  //     hash_table_node_t *temp = node; // set temp to the node
-  //     node = node->next;              // set node to the next node      
+  for (int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
+  {
 
-  //     temp = find_representative(temp);
+    hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
+    
+    while(node != NULL)                             // while the node has a next node
+    {
 
-  //     connected_component_diameter(temp); // run connected_component_diameter
+      if(node->visited == 1){
+        node = node->next;
+        continue;
+      }
 
-  //     adjacency_node_t *adj_node = temp->head; // set adj_node to the first element of the adjacency list
-  //     while (adj_node != NULL)                 // meter os nos da componente todos visited
-  //     {
-  //       // adjacency_node_t *temp_adj = adj_node;
-  //       adj_node->vertex->visited = 1;
-  //       printf("adj_node: %s\n", adj_node->vertex->word);
-  //       adj_node = adj_node->next;             
-        
-  //     }
+      hash_table_node_t *temp = node; // set temp to the node
 
-      
-  //   }
-  // }
+      temp = find_representative(temp);
+
+      int x = connected_component_diameter(temp); // run connected_component_diameter
+      printf(" - diam: %i || %s\n", x, node->word);
+
+      adjacency_node_t *adj_node = temp->head; // set adj_node to the first element of the adjacency list
+
+      while (adj_node != NULL)                 // meter os nos da componente todos visited
+      {
+        printf("palavras vizinhas: %s\n", adj_node->vertex->word);
+        // adjacency_node_t *temp_adj = adj_node;
+        adj_node->vertex->visited = 1;
+        adj_node = adj_node->next;
+        printf("palavras vizinhas: %s\n", adj_node->vertex->word);
+
+      }
+      printf("--------------------------------------------\n");
+      node = node->next;              // set node to the next node      
+    }
+  }
 
 
   // printf("Number of vertices: %i", hash_table->number_of_vertices);
