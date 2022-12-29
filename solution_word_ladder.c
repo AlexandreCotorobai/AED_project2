@@ -212,7 +212,7 @@ static void hash_table_grow(hash_table_t *hash_table)
   }
 
   // set hash table elements to NULL pointer
-  for(int i = 0;i < hash_table->hash_table_size;i++)
+  for(unsigned int i = 0;i < hash_table->hash_table_size;i++)
     new_heads[i] = NULL;
 
   // save the old hash table
@@ -222,7 +222,7 @@ static void hash_table_grow(hash_table_t *hash_table)
   hash_table->heads = new_heads;
 
   // percorrer o hash table antigo e inserir os elementos no novo hash table
-  for(int i = 0;i < hash_table->hash_table_size/2;i++)
+  for(unsigned int i = 0;i < hash_table->hash_table_size/2;i++)
   {
     hash_table_node_t *node = old_heads[i];
     while(node != NULL)
@@ -245,7 +245,7 @@ static void hash_table_free(hash_table_t *hash_table)
   //
   // complete this
   //
-  for (int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
+  for (unsigned int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
   {
     hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
     while(node != NULL)                             // while the node has a next node
@@ -309,15 +309,23 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
     node->number_of_vertices = 1;
     node->number_of_edges = 0;
 
+    
+    FILE *fp = fopen("hash_table_loadfactor.txt", "a");
 
-    // printf("node word (not found): %s\n", node->word);
-    // printf("Hash table size: %d\n", hash_table->hash_table_size);
-    // printf("Number of entries: %d\n", hash_table->number_of_entries);
+    if (fp == NULL)
+    {
+      printf("Error!");
+      exit(1);
+    }
+
+    fprintf(fp, "%i,%.5f\n", hash_table->number_of_entries, (float)hash_table->number_of_entries/hash_table->hash_table_size);
+
+    fclose(fp);
 
     // se number_of_entries > 0.75 * hash_table_size chamar hash_table_grow
     if(hash_table->number_of_entries >= 0.75 * hash_table->hash_table_size)
     {
-      printf("has grownnnn!! prev %i size\n", hash_table->hash_table_size);
+      // printf("has grownnnn!! prev %i size\n", hash_table->hash_table_size);
       hash_table_grow(hash_table);
     }
 
@@ -509,8 +517,8 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
 
   // find representative of connected component
   //hash_table_node_t *representative = find_representative(origin);
-  
-  //hash_table_node_t *list_of_vertices[maximum_number_of_vertices];
+
+  // list_of_vertices = (hash_table_node_t **) malloc(maximum_number_of_vertices * sizeof(hash_table_node_t*));
   hash_table_node_t *parent = NULL;
 
 
@@ -529,6 +537,7 @@ static int breadh_first_search(int maximum_number_of_vertices,hash_table_node_t 
   while (r != w && stop == 0) {
 
     hash_table_node_t *current = list_of_vertices[r];
+    
     parent = current;
     r++;
 
@@ -614,8 +623,9 @@ static void list_connected_component(hash_table_t *hash_table,const char *word)
 
 
   int vertex_max = find_representative(node)->number_of_vertices;
-  hash_table_node_t *list_of_vertices[vertex_max];
-  int n_elements = breadh_first_search(vertex_max, &list_of_vertices, node, NULL);
+  hash_table_node_t **list_of_vertices = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));
+  
+  int n_elements = breadh_first_search(vertex_max, list_of_vertices, node, NULL);
 
   // todos os nodes visitados
   printf("--------------------------------------------\n");
@@ -643,26 +653,40 @@ static int connected_component_diameter(hash_table_node_t *node)
   //
   // complete this
   //
-
+  // printf("connected_component_diameter: node %s\n", node->word);
   int vertex_max = find_representative(node)->number_of_vertices;
 
-  hash_table_node_t **path;
+  hash_table_node_t **path, **list_of_vertices, **list_of_vertices2;
 
 
-  hash_table_node_t *list_of_vertices[vertex_max];
-  hash_table_node_t *list_of_vertices2[vertex_max];
-  breadh_first_search(vertex_max, &list_of_vertices, node, NULL);
+  list_of_vertices = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));
+  list_of_vertices2 = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));
+
   // hash_table_node_t *destino = NULL;
-
+  // printf("cheguei1\n");
   path = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t *));
+
+  if(list_of_vertices == NULL || list_of_vertices2 == NULL)
+  {
+    fprintf(stderr,"connected_component_diameter: out of memory\n");
+    exit(1);
+  }
+
+  int n = breadh_first_search(vertex_max, list_of_vertices, node, NULL);
+  // print all list of vertices
+  // for (int i = 0; i < vertex_max; i++) {
+    // printf("list_of_vertices[%i] = %s\n", i, list_of_vertices[i]->word);
+  // }
 
   diameter = 0;
 
   for (int i = 0; i < vertex_max; i++) {
     for (int j = i + 1; j < vertex_max; j++) {
-      breadh_first_search(vertex_max, &list_of_vertices2, list_of_vertices[i]->word, list_of_vertices[j]->word);
+      // printf("list[i] = %s\n", list_of_vertices[i]->word);
+      breadh_first_search(vertex_max, list_of_vertices2, list_of_vertices[i], list_of_vertices[j]);
 
       hash_table_node_t *temp = list_of_vertices[j];
+      // printf("temp word = %s\n", temp->word);
       int count = 0;
 
       // ver quantos nodes tem o caminho mais curto
@@ -675,7 +699,6 @@ static int connected_component_diameter(hash_table_node_t *node)
         diameter = count;
         temp = list_of_vertices[j];
 
-
         // hash_table_node_t *solArr2[count];
         // solArr2[vtemp] = destino;
 
@@ -686,13 +709,16 @@ static int connected_component_diameter(hash_table_node_t *node)
 
       }
     }
+    // printf("cheguei3\n");
   }
 
-  if(largest_diameter == NULL || diameter > largest_diameter) {
+  diameter = diameter -1;
+
+  if(diameter > largest_diameter) {
     largest_diameter = diameter;
     largest_diameter_example = path;
   }
-  if(shortest_diameter == NULL || diameter < shortest_diameter) {
+  if(diameter < shortest_diameter) {
     shortest_diameter = diameter;
     shortest_diameter_example = path;
   }
@@ -709,7 +735,8 @@ static int connected_component_diameter(hash_table_node_t *node)
   printf("--------------------------------------------\n");
 
 
-
+  free(list_of_vertices);
+  free(list_of_vertices2);
   free(path);
   return diameter;
 }
@@ -732,16 +759,17 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
 
     printf("path_finder: Word inserida não existe\n");
     return;
-
   }
 
   int vertex_max = find_representative(from_node)->number_of_vertices;
-  hash_table_node_t *list_of_vertices[vertex_max];
 
-  int n_elements = breadh_first_search(vertex_max, &list_of_vertices, from_node, to_node);
+  hash_table_node_t **list_of_vertices = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));;
 
-  hash_table_node_t *node = to_node;
-  int index = n_elements-1; int count = 0;
+  int n_elements = breadh_first_search(vertex_max, list_of_vertices, from_node, to_node);
+
+  hash_table_node_t *node = list_of_vertices[n_elements-1];
+  // int index = n_elements-1; 
+  int count = 0;
 
   // ver quantos nodes tem o caminho mais curto
   while(node != NULL){
@@ -763,8 +791,8 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
   printf("--------------------------------------------\n");
   printf("Caminho mais curto de %s a %s\n", from_word, to_word);
 
-  for (int i = 0; i < sizeof(solArr)/sizeof(solArr[0]); i++) {
-    printf("%i - %s\n",i, solArr[i]->word);
+  for (long unsigned int i = 0; i < sizeof(solArr)/sizeof(solArr[0]); i++) {
+    printf("%li - %s\n",i, solArr[i]->word);
   }
 
   int temp = sizeof(solArr)/sizeof(solArr[0]);
@@ -775,6 +803,7 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
     largest_diameter = temp;
     largest_diameter_example = solArr;
   }
+  free(list_of_vertices);
 
 }
 
@@ -793,33 +822,31 @@ static void graph_info(hash_table_t *hash_table)
   // and update the global variables
   //
 
-
-  // adjacency_node_t *representatives;
-  // adjacency_node_t *temp_adj = representatives;
-
   // for (int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
+  // {
+  //   hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
+  //   while(node != NULL && node->visited == 0)                             // while the node has a next node
   //   {
-  //     hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
-  //     while(node != NULL)                             // while the node has a next node
+  //     hash_table_node_t *temp = node; // set temp to the node
+  //     node = node->next;              // set node to the next node      
+
+  //     temp = find_representative(temp);
+
+  //     connected_component_diameter(temp); // run connected_component_diameter
+
+  //     adjacency_node_t *adj_node = temp->head; // set adj_node to the first element of the adjacency list
+  //     while (adj_node != NULL)                 // meter os nos da componente todos visited
   //     {
-  //       hash_table_node_t *temp = node; // set temp to the node
-  //       node = node->next;              // set node to the next node                 
-  //       temp = find_representative(temp);      // find the representative of the node
-
-  //       //check if temp is already in the list of representatives
-  //       int flag = 0;
-  //       while(temp_adj != NULL){
-  //         if(temp_adj->next == temp){
-  //           flag = 1;
-  //           break;
-  //         }
-  //         temp_adj = temp_adj->next;
-  //       }
-
+  //       // adjacency_node_t *temp_adj = adj_node;
+  //       adj_node->vertex->visited = 1;
+  //       printf("adj_node: %s\n", adj_node->vertex->word);
+  //       adj_node = adj_node->next;             
         
   //     }
-  //   }
 
+      
+  //   }
+  // }
 
 
   // printf("Number of vertices: %i", hash_table->number_of_vertices);
@@ -832,7 +859,6 @@ static void graph_info(hash_table_t *hash_table)
   printf("Diametro minimo: %i\n", shortest_diameter);
   printf("--------------------------------------------\n");
 
-
 }
 
 
@@ -841,12 +867,21 @@ static void hash_table_info(hash_table_t *hash_table)
 {
   printf("Hash table size : %i\n", hash_table->hash_table_size);
   printf("Hash table number of entries: %i\n", hash_table->number_of_entries);
-  printf("Has table number of edges: %i\n", hash_table->number_of_edges); // que?????????
+  // printf("Has table number of edges: %i\n", hash_table->number_of_edges); // que?????????
+  printf("Hash table load factor %.3f\n", (float)hash_table->number_of_entries/(float)hash_table->hash_table_size);
 
+  int max = 0, min = -1, sum = 0, number_of_lists = 0;
 
-  int max = 0, min = -1, sum = 0, list_number = 0;
+  FILE *fp = fopen("hash_table_distribution.txt", "w");
 
-  for(int i = 0; i < hash_table->hash_table_size; i++){
+    if (fp == NULL)
+    {
+      printf("Error!");
+      exit(1);
+    }
+
+  
+  for(unsigned int i = 0; i < hash_table->hash_table_size; i++){
     hash_table_node_t *node = hash_table->heads[i];
     int count = 0;
 
@@ -854,7 +889,7 @@ static void hash_table_info(hash_table_t *hash_table)
       continue;
     }
 
-    list_number++;
+    number_of_lists++;
 
     while(node != NULL){
       count++;
@@ -867,11 +902,14 @@ static void hash_table_info(hash_table_t *hash_table)
       min = count;
     }
     sum += count;
-  }
+    fprintf(fp, "%d,%d\n", i, count);
 
-  printf("Hash table max number of nodes in a list: %i\n", max);
-  printf("Hash table min number of nodes in a list: %i\n", min);
-  printf("Hash table average number of nodes in a list: %.3f\n", (float)sum/(float)list_number);
+  }
+  fclose(fp);
+
+  printf("Hash table longest chain size: %i\n", max);
+  printf("Hash table shortest chain size: %i\n", min);
+  printf("Hash table average chain size: %.3f\n", (float)sum/(float)number_of_lists);
 
 }
 
@@ -917,11 +955,10 @@ int main(int argc,char **argv)
   }
 
   // connected_component_diameter(find_word(hash_table,"tudo",0));
-  // graph_info(hash_table);
-
-  hash_table_info(hash_table);
+  graph_info(hash_table);
 
 
+  // hash_table_info(hash_table);
 
 
   // ask what to do
