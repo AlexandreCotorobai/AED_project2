@@ -629,7 +629,7 @@ static void list_connected_component(hash_table_t *hash_table,const char *word)
 
   // todos os nodes visitados
   printf("--------------------------------------------\n");
-  printf("Lista de todos os nós pertencentes à componenete de %s\n", word);
+  printf("Lista de todos os nós pertencentes à componente de %s\n", word);
   for (int i = 0; i < n_elements; i++) {
     printf("%i - %s\n",i, list_of_vertices[i]->word);
   }
@@ -813,58 +813,67 @@ static void graph_info(hash_table_t *hash_table)
   // complete this
   //
 
-  // run all heads of hash_table
-  // for each head, run connected_component_diameter
-  // and update the global variables
-  //
+  //printf("entries = %i\n", hash_table->number_of_entries);
+
+  hash_table_node_t **representatives = (hash_table_node_t *) malloc(hash_table->number_of_entries * sizeof(hash_table_node_t*));;
+  
+  if(representatives == NULL){
+    printf("graph_info: Erro ao alocar memoria\n");
+    return;
+  }
+
+  int index = 0, number_of_nodes = 0, number_of_edges = 0;
 
   for (int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
   {
 
     hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
-    
+
     while(node != NULL)                             // while the node has a next node
     {
+      hash_table_node_t *temp = find_representative(node); // set temp to the node
 
-      if(node->visited == 1){
-        node = node->next;
-        continue;
+      // check if temp in representatives
+      int flag = 0;
+  
+      for (int j = 0; j < index; j++) {
+        if (temp == representatives[j]) {
+          flag = 1;
+          break;
+        }
       }
 
-      hash_table_node_t *temp = node; // set temp to the node
+      if (flag == 0){
+        representatives[index++] = temp;
+        number_of_nodes += temp->number_of_vertices;
+        number_of_edges += temp->number_of_edges;
+        int x = connected_component_diameter(temp);   // run connected_component_diameter
+        printf(" - diam: %i || %s\n", x, temp->word);
+      }   
 
-      temp = find_representative(temp);
-
-      int x = connected_component_diameter(temp); // run connected_component_diameter
-      printf(" - diam: %i || %s\n", x, node->word);
-
-      adjacency_node_t *adj_node = temp->head; // set adj_node to the first element of the adjacency list
-
-      while (adj_node != NULL)                 // meter os nos da componente todos visited
-      {
-        printf("palavras vizinhas: %s\n", adj_node->vertex->word);
-        // adjacency_node_t *temp_adj = adj_node;
-        adj_node->vertex->visited = 1;
-        adj_node = adj_node->next;
-        printf("palavras vizinhas: %s\n", adj_node->vertex->word);
-
-      }
-      printf("--------------------------------------------\n");
-      node = node->next;              // set node to the next node      
+      node = node->next;              // set node to the next node   
     }
+  
   }
+  free(representatives);
 
 
   // printf("Number of vertices: %i", hash_table->number_of_vertices);
   // printf("Number of edges: %i", hash_table->number_of_edges);
 
   printf("--------------------------------------------\n");
+  // printf("teste: %i\n", diameter_sum);
   printf("Numero de componentes conexas: %i\n", number_of_connected_components);
-  printf("Diametro medio: %i\n", diameter_sum/number_of_connected_components);
+  printf("Diametro medio: %.4f\n", (float)diameter_sum/(float)number_of_connected_components);
   printf("Diametro maximo: %i\n", largest_diameter);
   printf("Diametro minimo: %i\n", shortest_diameter);
   printf("--------------------------------------------\n");
-
+  for( int i = 0; i < largest_diameter; i++ ){
+    printf("LD %i - %s\n", i, largest_diameter_example[i]->word);
+  }
+  for( int i = 0; i < shortest_diameter; i++ ){
+    printf("SD %i - %s\n", i, shortest_diameter_example[i]->word);
+  }
 }
 
 
