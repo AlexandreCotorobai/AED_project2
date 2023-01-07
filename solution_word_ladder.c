@@ -391,18 +391,24 @@ static void add_edge(hash_table_t *hash_table,hash_table_node_t *from,const char
     {
       from_representative->representative = to_representative;
       to_representative->number_of_vertices += from_representative->number_of_vertices;
-      to_representative->number_of_edges += from_representative->number_of_edges;
+      to_representative->number_of_edges += from_representative->number_of_edges + 1;
+      from_representative->number_of_edges = 0;
+      from_representative->number_of_vertices = 0;
     }
     else
     {
       to_representative->representative = from_representative;
       from_representative->number_of_vertices += to_representative->number_of_vertices;
-      from_representative->number_of_edges += to_representative->number_of_edges;
+      from_representative->number_of_edges += to_representative->number_of_edges + 1;
+      to_representative->number_of_edges = 0;
+      to_representative->number_of_vertices = 0;
     }
+  }else{
+    from_representative->number_of_edges++;
   }
   
-  to_representative->number_of_edges++;
-  from_representative->number_of_edges++;
+  // to_representative->number_of_edges++;
+  // from_representative->number_of_edges++;
 
   edge_origin = allocate_adjacency_node();
   edge_origin->vertex = to;
@@ -707,13 +713,13 @@ static int connected_component_diameter(hash_table_node_t *node)
     // printf("cheguei3\n");
   }
 
-  // diameter = diameter -1;
+  diameter = diameter -1;
 
-  if(diameter > largest_diameter) {
+  if(largest_diameter == NULL || diameter > largest_diameter) {
     largest_diameter = diameter;
     largest_diameter_example = path;
   }
-  if(diameter < shortest_diameter) {
+  if(shortest_diameter == NULL || diameter < shortest_diameter) {
     shortest_diameter = diameter;
     shortest_diameter_example = path;
   }
@@ -732,7 +738,7 @@ static int connected_component_diameter(hash_table_node_t *node)
 
   free(list_of_vertices);
   free(list_of_vertices2);
-  free(path);
+  
   return diameter;
 }
 
@@ -799,7 +805,6 @@ static void path_finder(hash_table_t *hash_table,const char *from_word,const cha
     largest_diameter_example = solArr;
   }
   free(list_of_vertices);
-
 }
 
 
@@ -846,20 +851,21 @@ static void graph_info(hash_table_t *hash_table)
       if (flag == 0){
         representatives[index++] = temp;
         number_of_nodes += temp->number_of_vertices;
-        number_of_edges += temp->number_of_edges;
+        hash_table->number_of_edges += temp->number_of_edges;
+
         int x = connected_component_diameter(temp);   // run connected_component_diameter
         printf(" - diam: %i || %s\n", x, temp->word);
       }   
 
       node = node->next;              // set node to the next node   
     }
-  
+
   }
   free(representatives);
 
 
-  // printf("Number of vertices: %i", hash_table->number_of_vertices);
-  // printf("Number of edges: %i", hash_table->number_of_edges);
+  printf("Number of nodes: %i\n", number_of_nodes);
+  printf("Number of edges: %i\n", hash_table->number_of_edges);
 
   printf("--------------------------------------------\n");
   // printf("teste: %i\n", diameter_sum);
@@ -868,12 +874,18 @@ static void graph_info(hash_table_t *hash_table)
   printf("Diametro maximo: %i\n", largest_diameter);
   printf("Diametro minimo: %i\n", shortest_diameter);
   printf("--------------------------------------------\n");
+
+  printf("-----------Largest Path--------------\n");
   for( int i = 0; i < largest_diameter; i++ ){
     printf("LD %i - %s\n", i, largest_diameter_example[i]->word);
   }
+  printf("-----------Shortest Path--------------\n");
   for( int i = 0; i < shortest_diameter; i++ ){
     printf("SD %i - %s\n", i, shortest_diameter_example[i]->word);
   }
+
+  free(largest_diameter_example);
+  free(shortest_diameter_example);
 }
 
 
