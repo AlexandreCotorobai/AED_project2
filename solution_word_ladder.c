@@ -649,8 +649,8 @@ static void list_connected_component(hash_table_t *hash_table,const char *word)
 // compute the diameter of a connected component (optional)
 //
 
-static int largest_diameter, shortest_diameter;
-static hash_table_node_t **largest_diameter_example, **shortest_diameter_example;
+static int largest_diameter = -1, shortest_diameter = -1;
+static hash_table_node_t **largest_diameter_example;
 
 static int connected_component_diameter(hash_table_node_t *node)
 {
@@ -661,11 +661,12 @@ static int connected_component_diameter(hash_table_node_t *node)
   //
   // printf("connected_component_diameter: node %s\n", node->word);
   hash_table_node_t **path, **list_of_vertices, **list_of_vertices2;
+  
   int vertex_max = find_representative(node)->number_of_vertices;
 
   list_of_vertices = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));
   list_of_vertices2 = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t*));
-  // path = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t *));
+  path = (hash_table_node_t **) malloc(vertex_max * sizeof(hash_table_node_t *));
 
   if(list_of_vertices == NULL || list_of_vertices2 == NULL)
   {
@@ -673,14 +674,14 @@ static int connected_component_diameter(hash_table_node_t *node)
     exit(1);
   }
 
-  int n = breadh_first_search(vertex_max, list_of_vertices, node, NULL);
+  breadh_first_search(vertex_max, list_of_vertices, node, NULL);
   // print all list of vertices
   // for (int i = 0; i < vertex_max; i++) {
     // printf("list_of_vertices[%i] = %s\n", i, list_of_vertices[i]->word);
   // }
 
   diameter = 0;
-
+  int count = 0;
   for (int i = 0; i < vertex_max; i++) {
 
     // printf("list[i] = %s\n", list_of_vertices[i]->word);
@@ -689,7 +690,8 @@ static int connected_component_diameter(hash_table_node_t *node)
     // destino
     hash_table_node_t *temp = list_of_vertices2[x-1];
     // printf("temp word = %s\n", temp->word);
-    int count = 0;
+
+    count = 0;
 
     // ver quantos nodes tem o caminho mais curto
     while(temp != NULL){
@@ -699,27 +701,32 @@ static int connected_component_diameter(hash_table_node_t *node)
 
     if(count > diameter){
       diameter = count;
-      // temp = list_of_vertices[j];
+      temp = list_of_vertices2[x-1];
 
-
-
-      // while(temp != NULL){
-      //   path[--count] = temp;
-      //   temp = temp->previous;
-      // }
+      while(temp != NULL){
+        path[--count] = temp;
+        temp = temp->previous;
+      }
 
     }
-
     // printf("cheguei3\n");
   }
-
+  
   // diameter = diameter -1;
 
-  // if(largest_diameter == NULL || diameter > largest_diameter) {
-  //   // largest_diameter = diameter;
-  //   largest_diameter_example = path;
-  // }
-  // if(shortest_diameter == NULL || diameter < shortest_diameter) {
+  if(largest_diameter == -1 || diameter > largest_diameter) {
+    // largest_diameter = diameter;
+    if(largest_diameter_example != NULL){
+      free(largest_diameter_example);
+    }
+      
+    largest_diameter_example = (hash_table_node_t **) malloc(count * sizeof(hash_table_node_t *));
+    
+    for(int i = 0; i < count; i++){
+      largest_diameter_example[i] = path[i];
+    }
+  }
+  // if(shortest_diameter == -1 || diameter < shortest_diameter) {
   //   // shortest_diameter = diameter;
   //   shortest_diameter_example = path;
   // }
@@ -739,10 +746,10 @@ static int connected_component_diameter(hash_table_node_t *node)
     printf("connected_component_diameter: diameter not found\n");
     return -1;
   }
-
+  
   free(list_of_vertices);
   free(list_of_vertices2);
-  
+  free(path);
   return diameter;
 }
 
@@ -824,9 +831,9 @@ static void graph_info(hash_table_t *hash_table)
 
   //printf("entries = %i\n", hash_table->number_of_entries);
 
-  hash_table_node_t **representatives = (hash_table_node_t *) malloc(hash_table->number_of_entries * sizeof(hash_table_node_t*));;
-  hash_table_node_t *big=NULL, *small=NULL;
-  int size_smallest_component=NULL, size_largest_component=NULL, sum_size_component = 0;
+  hash_table_node_t **representatives = (hash_table_node_t **) malloc(hash_table->number_of_entries * sizeof(hash_table_node_t*));
+  // hash_table_node_t *big=NULL, *small=NULL;
+  int size_smallest_component=-1, size_largest_component=-1, sum_size_component = 0;
 
 
   if(representatives == NULL){
@@ -838,7 +845,7 @@ static void graph_info(hash_table_t *hash_table)
 
   int index = 0, number_of_nodes = 0, diameter_sum = 0;
 
-  for (int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
+  for (unsigned int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
   {
 
     hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
@@ -868,36 +875,48 @@ static void graph_info(hash_table_t *hash_table)
     }
 
   }
+  FILE *fp2 = fopen("graph_component_distribution.txt", "w");
+
+  if (fp2 == NULL)
+  {
+    printf("Error!");
+    exit(1);
+  }
 
   for (int i = 0; i < index; i++) {
     hash_table_node_t *temp = representatives[i];
     int diameter = connected_component_diameter(temp) - 1;   // run connected_component_diameter
     int comp_size = temp->number_of_vertices;
-    
-    printf(" - diam: %i || %s\n", diameter, temp->word);
+
+    fprintf(fp2, "%d,%d\n", comp_size, diameter);
+
+    // printf(" - diam: %i || %s\n", diameter, temp->word);
 
     // ver maior e menor diametro
-    if(largest_diameter == NULL || diameter > largest_diameter) {
+    if(largest_diameter == -1 || diameter > largest_diameter) {
       largest_diameter = diameter;
-      big = temp;
+      // big = temp;
       // largest_diameter_example = path;
     }
-    if(shortest_diameter == NULL || diameter < shortest_diameter) {
+
+    if(shortest_diameter == -1 || diameter < shortest_diameter) {
       shortest_diameter = diameter;
       // shortest_diameter_example = path;
-      small = temp;
+      // small = temp;
     }
     diameter_sum += diameter;
 
     // ver maior e menor componente
-    if(size_largest_component == NULL || comp_size > size_largest_component) {
+    if(size_largest_component == -1 || comp_size > size_largest_component) {
       size_largest_component = comp_size;
     }
-    if(size_smallest_component == NULL || comp_size < size_smallest_component) {
+    if(size_smallest_component == -1 || comp_size < size_smallest_component) {
       size_smallest_component = comp_size;
     }
     sum_size_component += comp_size;
   }
+
+  fclose(fp2);
 
   // shortest_diameter_example = (hash_table_node_t **) malloc(small->number_of_vertices * sizeof(hash_table_node_t*));
   // breadh_first_search(small->number_of_vertices, shortest_diameter_example, small, NULL);
@@ -920,18 +939,18 @@ static void graph_info(hash_table_t *hash_table)
   printf("Diametro maximo: %i\n", largest_diameter);
   printf("Diametro minimo: %i\n", shortest_diameter);
 
+  printf("-----------Largest Path--------------\n");
+  for( int i = 0; i <= largest_diameter; i++ ){
+    printf("%i - %s\n", i, largest_diameter_example[i]->word);
+  }
 
-  // printf("-----------Largest Path--------------\n");
-  // for( int i = 0; i < big->number_of_vertices; i++ ){
-  //   printf("LD %i - %s\n", i, largest_diameter_example[i]->word);
-  // }
   // printf("-----------Shortest Path--------------\n");
   // for( int i = 0; i < small->number_of_vertices; i++ ){
   //   printf("SD %i - %s\n", i, shortest_diameter_example[i]->word);
   // }
 
   free(representatives);
-  // free(largest_diameter_example);
+  free(largest_diameter_example);
   // free(shortest_diameter_example);
 }
 
@@ -1029,9 +1048,9 @@ int main(int argc,char **argv)
   }
 
   // connected_component_diameter(find_word(hash_table,"tudo",0));
+  
+  
   graph_info(hash_table);
-
-
   // hash_table_info(hash_table);
 
 
