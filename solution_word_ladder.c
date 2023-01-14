@@ -318,7 +318,7 @@ static hash_table_node_t *find_word(hash_table_t *hash_table,const char *word,in
       exit(1);
     }
 
-    fprintf(fp, "%i,%.5f\n", hash_table->number_of_entries, (float)hash_table->number_of_entries/hash_table->hash_table_size);
+    fprintf(fp, "%i,%.5f,%i\n", hash_table->number_of_entries, (float)hash_table->number_of_entries/hash_table->hash_table_size, i);
 
     fclose(fp);
 
@@ -944,10 +944,31 @@ static void graph_info(hash_table_t *hash_table)
     printf("%i - %s\n", i, largest_diameter_example[i]->word);
   }
 
-  // printf("-----------Shortest Path--------------\n");
-  // for( int i = 0; i < small->number_of_vertices; i++ ){
-  //   printf("SD %i - %s\n", i, shortest_diameter_example[i]->word);
-  // }
+  // FAZER GRAFO
+  FILE *fp3 = fopen("graph.txt", "w");
+
+  if (fp3 == NULL)
+  {
+    printf("Error!");
+    exit(1);
+  }
+  for (unsigned int i=0; i<hash_table->hash_table_size; i++)  // loop through the hash table
+  {
+    hash_table_node_t *node = hash_table->heads[i]; // set node to the first element of the hash table
+    while(node != NULL)                             // while the node has a next node
+    {
+      hash_table_node_t *temp = node; // set temp to the node
+      node = node->next;              // set node to the next node                    // free the temp node
+      adjacency_node_t *adj_node = temp->head; // set adj_node to the first element of the adjacency list
+      while (adj_node != NULL)                 // while the adj_node has a next node
+      {
+        adjacency_node_t *temp_adj = adj_node; // set temp_adj to the adj_node
+        adj_node = adj_node->next;             // set adj_node to the next node 
+        fprintf(fp3, "%s %s\n", temp->word, temp_adj->vertex->word); // print the word and the word in the adjacency list")                    
+      }                             
+    }
+  }
+  fclose(fp3);
 
   free(representatives);
   free(largest_diameter_example);
@@ -967,11 +988,11 @@ static void hash_table_info(hash_table_t *hash_table)
 
   FILE *fp = fopen("hash_table_distribution.txt", "w");
 
-    if (fp == NULL)
-    {
-      printf("Error!");
-      exit(1);
-    }
+  if (fp == NULL)
+  {
+    printf("Error!");
+    exit(1);
+  }
 
   
   for(unsigned int i = 0; i < hash_table->hash_table_size; i++){
@@ -1050,7 +1071,7 @@ int main(int argc,char **argv)
   // connected_component_diameter(find_word(hash_table,"tudo",0));
   
   
-  graph_info(hash_table);
+  // graph_info(hash_table);
   // hash_table_info(hash_table);
 
 
